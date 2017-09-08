@@ -1,0 +1,36 @@
+{
+  "name": "pianoman",
+  "version": "1.0.0",
+  "description": "A Discord music bot with a recommendation engine.",
+  "main": "PianoMan.js",
+  "scripts": {
+    "preinstall": "npm i -g pm2",
+    "test": "standard & nodemon",
+    "start": "pm2 start PianoMan.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alex-taxiera/PianoMan.git"
+  },
+  "author": "Alex Taxiera",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/alex-taxiera/PianoMan/issues"
+  },
+  "homepage": "https://github.com/alex-taxiera/PianoMan#readme",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "discordie": "^0.11.0",
+    "melanke-watchjs": "^1.3.1",
+    "moment": "^2.18.1",
+    "pm2": "^2.6.1",
+    "seedrandom": "^2.4.3",
+    "youtube-dl": "^1.11.1",
+    "ytpl": "^0.1.8",
+    "ytsr": "^0.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^1.12.0",
+    "standard": "^10.0.3"
+  }
+}
