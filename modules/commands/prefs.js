@@ -17,11 +17,11 @@ module.exports = new Command(
 
     let embed = {
       description: ':heartbeat: [**Preferences**](https://github.com/alex-taxiera/PianoMan)',
-      thumbnail: {url: 'https://raw.githubusercontent.com/alex-taxiera/PianoMan/data/PianoMan.png'},
+      thumbnail: {url: 'https://github.com/alex-taxiera/PianoMan/blob/master/data/PianoMan.png?raw=true'},
       timestamp: moment(),
       color: 0x3498db,
       footer: {
-        icon_url: 'https://raw.githubusercontent.com/alex-taxiera/PianoMan/data/PianoMan.png',
+        icon_url: 'https://github.com/alex-taxiera/PianoMan/blob/master/data/PianoMan.png?raw=true',
         text: 'PianoMan'
       },
       fields: [
