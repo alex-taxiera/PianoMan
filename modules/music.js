@@ -18,7 +18,6 @@ module.exports = {
   initialize: function (guilds) {
     guilds.forEach((guild) => {
       playerMap.set(guild.id, new Player())
-      module.exports.checkPlayer(guild.id, true)
     })
   },
   checkPlayer: function (id, start = false) {

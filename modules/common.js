@@ -31,6 +31,7 @@ module.exports = {
 
       if (channels[0]) {
         channels[0].join()
+        .then(() => { require('./music.js').checkPlayer(guildId) })
         return { id: channels[0].id, name: channels[0].name }
       }
     }
