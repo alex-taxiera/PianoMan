@@ -24,7 +24,7 @@ The following is the layout of our K-Means Clustering algorithm from which we wi
   function get_range
 		[determine bounds of data. For example: x > 10, x < 150, y > 5, y < 200]
     
-	function assign_values
+  function assign_values
 [assigns all songs/artists as data points to clusters based on nearest cluster by distance, then moves clusters to the average of their songs. Loop through this process several times, solidifying and occasionally creating new clusters based on where the songs land. This will likely be split up into several functions, implementation is not finalized.]
  
  function setup:
