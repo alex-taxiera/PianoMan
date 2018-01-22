@@ -36,6 +36,7 @@ module.exports = {
           let voice = channels.get(savedGuild.voice.id)
           if (voice && func.can(['SPEAK', 'CONNECT'], voice)) {
             voice.join()
+            .then(() => { require('./music.js').checkPlayer(guild.id, true) })
             tmp.voice = { id: voice.id, name: voice.name }
           } else {
             tmp.voice = func.findChannel('voice', guild.id)
@@ -112,6 +113,7 @@ function add (guild, channels) {
 
   if (tmp.voice) {
     channels.get(tmp.voice.id).join()
+    .then(() => { require('./music.js').checkPlayer(guild.id, true) })
   }
   if (!tmp.text || !tmp.voice) {
     func.dmWarn(guild, tmp.text, tmp.voice)

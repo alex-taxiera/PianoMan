@@ -38,15 +38,13 @@ bot.Dispatcher.on('VOICE_CHANNEL_LEAVE', (e) => {
 
     if (!e.newChannelId) {
       let voiceChannel = bot.Channels.get(e.channelId)
-      voiceChannel.join(voiceChannel).catch((e) => { func.log(null, 'red', e) })
+      voiceChannel.join(voiceChannel)
+      .then(() => { music.checkPlayer(id) })
+      .catch((e) => { func.log(null, 'red', e) })
     }
   } else {
     music.checkPlayer(id)
   }
-})
-
-bot.Dispatcher.on('VOICE_CHANNEL_JOIN', (e) => {
-  setTimeout(() => { music.checkPlayer(e.guildId) }, 100)
 })
 
 bot.Dispatcher.on('CHANNEL_CREATE', (e) => {
@@ -64,6 +62,7 @@ bot.Dispatcher.on('CHANNEL_CREATE', (e) => {
     } else if (ch.type === 2 && !voice &&
     func.can(['SPEAK', 'CONNECT'], ch)) {
       ch.join()
+      .then(() => { music.checkPlayer(id) })
       guildInfo.voice = { id: ch.id, name: ch.name }
     }
   }

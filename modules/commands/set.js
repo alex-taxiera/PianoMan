@@ -64,6 +64,7 @@ module.exports = new Command(
               if (func.can(['SPEAK'], channel)) {
                 guildInfo.voice = {id: channel.id, name: channel.name}
                 channel.join()
+                .then(() => { require('./music.js').checkPlayer(id) })
                 str = 'Default set!'
               } else {
                 str = 'Cannot speak in that channel!'
