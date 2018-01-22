@@ -31,4 +31,4 @@ The following is the layout of our K-Means Clustering algorithm from which we wi
 		[initialize a grid to plot various songs, then call get_range to determine how big the grid should be. Once the grid is made, call initialize_clusters to have a base to work with. Then call initialize_data, this will place the data that we have collected. Finally, sort by calling assign_values ] 
     
     
-Thank you for following our work. We look forward to servicing you in the future-nya :3
+Thank you for following our work.
