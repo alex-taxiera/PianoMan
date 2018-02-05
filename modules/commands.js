@@ -4,7 +4,7 @@ const permissions = require('./permissions/')
 const db = require('./database.js')
 
 module.exports = {
-  handleCommand: function (msg, text) {
+  handleCommand: async function (msg, text) {
     let command = ''
     let params = text.split(' ')
     command = commands[params[0]]
@@ -16,7 +16,7 @@ module.exports = {
         })
       } else {
         let perm = permissions[command.perm]
-        if (allow(perm, msg)) {
+        if (await allow(perm, msg)) {
           params.splice(0, 1)
           if (command.name === 'help') {
             params = commands
@@ -33,12 +33,12 @@ module.exports = {
   }
 }
 
-function allow (perm, msg) {
+async function allow (perm, msg) {
   let info = db.getGuildInfo(msg.guild.id)
   let member = msg.member
   let keys = Object.keys(permissions)
   for (let i = keys.indexOf(perm.name); i < keys.length; i++) {
-    if (permissions[keys[i]].check(info, member, msg)) {
+    if (await permissions[keys[i]].check(info, member, msg)) {
       return true
     }
   }

@@ -5,14 +5,14 @@ module.exports = new Permission(
   'Anyone in Voice',
   function (info, member, msg) {
     let memberVoice = member.getVoiceChannel()
-    let botVoice = require('../../TuxedoMan.js').User.getVoiceChannel(info.guild.id)
+    let botVoice = require('../../PianoMan.js').User.getVoiceChannel(info.guild.id)
     if (memberVoice && botVoice.id === memberVoice.id) {
       return true
     }
     return false
   },
   function (msg) {
-    let str = `Must be in voice chat with ${require('../../TuxedoMan.js').User.username}`
+    let str = `Must be in voice chat with ${require('../../PianoMan.js').User.username}`
     return new Response(msg, str)
   }
 )
