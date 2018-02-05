@@ -4,7 +4,7 @@ const Response = require('../classes/Response.js')
 module.exports = new Permission(
   'Admin',
   async function (info, member, msg) {
-    let app = await require('../../TuxedoMan.js').User.getApplication()
+    let app = await require('../../PianoMan.js').User.getApplication()
     if (member.id === app.owner.id) {
       return true
     } else {
