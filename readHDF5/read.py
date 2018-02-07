@@ -3,11 +3,12 @@ import h5py
 import json
 
 f = h5py.File(sys.argv[1], 'r')
-d = {'id': sys.argv[1][2:-3]}
+d = {'id': sys.argv[1][-21:-3]}
 for i in f.keys():
     d[i] = {}
     for j in f[i].keys():
         x = list()
+        #print(j)
         for k in range(len(f[i][j])):
             y = f[i][j][k]
             if y.__class__.__name__ == 'int32':
