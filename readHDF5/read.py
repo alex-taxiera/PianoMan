@@ -8,6 +8,10 @@ for i in f.keys():
     d[i] = {}
     for j in f[i].keys():
         x = list()
+        if i == 'analysis' and j == 'songs':
+            continue
+        if 'confidence' in j:
+            continue
         #print(j)
         for k in range(len(f[i][j])):
             y = f[i][j][k]
