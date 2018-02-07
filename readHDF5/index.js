@@ -1,9 +1,4 @@
-module.exports = function (filepath) {
-  const output = require('child_process').spawnSync('python', [require('path').join(__dirname, '/read.py'), filepath])
-  if (`${output.stderr}`) {
-    console.log(`${output.stderr}`)
-    console.log(filepath)
-  } else {
-    return JSON.parse(output.stdout)
-  }
+module.exports = async function (filepath, handler) {
+  const output = require('child_process').spawn('python', [require('path').join(__dirname, '/read.py'), filepath])
+  output.stdout.on('data', handler)
 }
