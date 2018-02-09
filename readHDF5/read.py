@@ -21,7 +21,7 @@ for i in f.keys():
                 z = [ a for a in y]
                 if i == 'metadata':
                     j = 'song'
-                    x = {'artist': z[9].decode('UTF-8'), 'title': z[18].decode('UTF-8')}
+                    x = {'artist': z[9].decode('UTF-8'), 'artist_id': z[4].decode('UTF-8'), 'title': z[18].decode('UTF-8')}
                 elif i == 'musicbrainz':
                     j = 'year'
                     x = str(z[1])
