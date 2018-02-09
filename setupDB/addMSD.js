@@ -45,13 +45,9 @@ async function handleDirectory (dir) {
 }
 
 async function handleQueue () {
-  while (queue.length > 0) {
-    if (count < 8) {
-      count++
-      h5(queue.splice(0, 1)[0], handleData)
-    } else {
-      break
-    }
+  while (queue.length > 0 && count < 8) {
+    count++
+    h5(queue.splice(0, 1)[0], handleData)
   }
 }
 
