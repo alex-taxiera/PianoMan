@@ -8,7 +8,6 @@ var md = require('knex')({
   }
 })
 
-md.schema.createTable('msd', (table) => {
   table.string('id')
   table.string('title')
   table.string('year')
@@ -26,4 +25,5 @@ md.schema.createTable('msd', (table) => {
   table.string('beats_start')
   table.string('tatums_start')
   table.string('bars_start')
+md.schema.createTable('songs', (table) => {
 }).then()
