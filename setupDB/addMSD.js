@@ -33,7 +33,7 @@ async function stats (path) {
 async function handleFile (file) {
   if (file.endsWith('h5')) {
     queue.push(file)
-    if (queue.length === 10 && start) {
+    if (queue.length === 8 && start) {
       start = false
       handleQueue()
     }
