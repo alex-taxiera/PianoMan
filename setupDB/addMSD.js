@@ -71,6 +71,8 @@ async function handleData (stdout) {
     artist_id: song.metadata.song.artist_id,
     artist_name: song.metadata.song.artist,
     similar_artists: JSON.stringify(song.metadata.similar_artists),
+    artist_tags: JSON.stringify(song.musicbrainz.artist_mbtags),
+    artist_tags_count: JSON.stringify(song.musicbrainz.artist_mbtags_count),
     artist_terms: JSON.stringify(song.metadata.artist_terms),
     artist_terms_freq: JSON.stringify(song.metadata.artist_terms_freq),
     artist_terms_weight: JSON.stringify(song.metadata.artist_terms_weight),

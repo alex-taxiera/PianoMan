@@ -14,6 +14,8 @@ md.schema.createTable('songs', (table) => {
   table.string('year')
   table.string('artist_id')
   table.string('artist_name')
+  table.string('artist_tags')
+  table.string('artist_tags_count')
   table.string('similar_artists')             // IDs
   table.string('artist_terms')
   table.string('artist_terms_freq')
