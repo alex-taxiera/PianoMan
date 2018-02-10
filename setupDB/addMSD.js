@@ -81,7 +81,7 @@ async function handleData (stdout) {
     segments_loudness_max: JSON.stringify(song.analysis.segments_loudness_max),
     beats_start: JSON.stringify(song.analysis.beats_start),
     tatums_start: JSON.stringify(song.analysis.tatums_start),
-    bars_start: JSON.stringify(song.analysis.bar_start)
+    bars_start: JSON.stringify(song.analysis.bars_start)
   }
 
   md('msd').insert(obj).then()
