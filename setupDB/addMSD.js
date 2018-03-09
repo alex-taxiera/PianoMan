@@ -1,42 +1,56 @@
 const fs = require('fs')
 const h5 = require('../readHDF5')
 const db = require('../modules/database.js')
-const path = process.argv[2]
-let max = parseInt(process.argv[3]) || 1
-const batch = (max > 1000) ? 1000 : max
-let count = 0
-let time = Date.now()
 
+const path = process.argv[2]
+const max = parseInt(process.argv[3]) || 1
+const batch = (max > 1000) ? 1000 : max
+
+let time = Date.now()
+let lastSong = ''
+let count = 0
 let queue = []
 let files = []
-let songs = []
 
 start(path)
 
 async function start (path) {
-  songs = await db.pluck('songs', 'track_id')
+  lastSong = await db.lastSong()
+  console.log(lastSong)
   await stats(path)
-  read()
+  trimDupes()
+  if (files.length > 0) {
+    read()
+  } else {
+    process.exit()
+  }
 }
 
 async function stats (path) {
-  if (count < max) {
+  if (files.length < max) {
     let stat = fs.statSync(path)
     if (stat.isDirectory()) {
       await handleDirectory(path)
     } else if (stat.isFile() && path.endsWith('h5')) {
-      if (!songs.includes(path.slice(-21, -3))) {
-        count++
-        files.push(path)
+      files.push(path)
+      if (files.length >= max) {
+        trimDupes()
       }
     }
   }
 }
 
+function trimDupes () {
+  for (let i = 0; i < files.length; i++) {
+    if (files[i].includes(lastSong)) {
+      files = files.filter((val, j) => j > i)
+    }
+  }
+}
+
 async function read () {
-  count = 0
   while (files.length > 0) {
-    await readData(files.pop())
+    await readData(files.splice(0, 1))
   }
   if (queue.length > 0) {
     await handleQueue()
@@ -51,25 +65,15 @@ async function handleDirectory (dir) {
 }
 
 async function handleQueue () {
-  Promise.all(queue.map(db.insert)).then(() => { if (files.length <= 0) process.exit() })
+  await Promise.all(queue.map(db.insert)).then(() => { if (files.length <= 0) process.exit() })
 }
 
 async function readData (path) {
   let data = []
   let track = h5(path)
-  for (let key in track) {
-    if (typeof track[key] === 'string') {
-      track[key] = track[key].replace('�', '')
-    }
-  }
   let { metadata, artist, song } = makeObjects(track)
   console.log(track.track_id, ++count, Date.now() - time)
-
-  let artists = await db.pluck('artists', 'artist_id')
-  if (!artists.includes(track.artist_id)) {
-    data.push(['artists', artist])
-  }
-  data.push(['metadata', metadata], ['songs', song])
+  data.push(['metadata', metadata], ['artists', artist], ['songs', song])
   queue.push(data)
   if (queue.length === batch) { await handleQueue(); queue = [] }
 }
