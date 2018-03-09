@@ -2,3 +2,4 @@ playlists
 node_modules
 config.json
 nodemon.json
+.vs*

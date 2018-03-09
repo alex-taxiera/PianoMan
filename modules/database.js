@@ -3,9 +3,35 @@ const func = require('./common.js')
 const Client = require('./classes/Client.js')
 const data = './data/guilds/'
 
+var md = require('knex')({
+  client: 'mysql',          // Variable connection name, match to cloud
+  connection: {
+    user: 'alex',
+    password: 'horsea',
+    host: 'localhost',
+    database: 'million'
+  },
+  pool: { min: 1, max: 100 }
+})
+
 let clientMap = new Map()
 
 module.exports = {
+  insert: async function (data) {
+    for (let [table, value] of data) {
+      try {
+        await md(table).insert(value).then()
+      } catch (e) {
+        console.error(e.sqlMessage)
+      }
+    }
+  },
+  pluck: async function (table, pluckee) {
+    return md(table).pluck(pluckee)
+  },
+  lastSong: async function () {
+    return (await md('songs').pluck('track_id').orderBy('track_id', 'desc'))[0]
+  },
   initialize: function (guilds, channels) {
     let saves = fs.readdirSync(data).filter((file) => {
       return file.slice(-5) === '.json'
