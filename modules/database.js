@@ -9,7 +9,7 @@ var md = require('knex')({
     user: 'alex',
     password: 'horsea',
     host: 'localhost',
-    database: 'test'
+    database: 'million'
   },
   pool: { min: 1, max: 100 }
 })
@@ -18,9 +18,9 @@ let clientMap = new Map()
 
 module.exports = {
   insert: async function (data) {
-    for (let entry of data) {
+    for (let [table, value] of data) {
       try {
-        await md(entry[0]).insert(entry[1]).then()
+        await md(table).insert(value).then()
       } catch (e) {
         console.error(e.sqlMessage)
       }
@@ -28,6 +28,9 @@ module.exports = {
   },
   pluck: async function (table, pluckee) {
     return md(table).pluck(pluckee)
+  },
+  lastSong: async function () {
+    return (await md('songs').pluck('track_id').orderBy('track_id', 'desc'))[0]
   },
   initialize: function (guilds, channels) {
     let saves = fs.readdirSync(data).filter((file) => {
