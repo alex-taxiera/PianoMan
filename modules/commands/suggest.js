@@ -11,6 +11,8 @@ module.exports = new Command(
   function (msg) {
     // get data on message.member.id
     // call algorithm on user database
+    // simulated user data
+    let info = { id: 'abc', recent_songs: []}
     let suggestions = [
       {name: 'All Star', sLink: 'https://www.youtube.com/watch?v=L_jWHffIx5E', artist: 'Smash Mouth', aLink: 'https://en.wikipedia.org/wiki/Smash_Mouth'},
       {name: 'Photograph', sLink: 'https://www.youtube.com/watch?v=BB0DU4DoPP4', artist: 'Nickelback', aLink: 'https://en.wikipedia.org/wiki/Nickelback'},
