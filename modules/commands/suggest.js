@@ -1,6 +1,7 @@
 const Command = require('../classes/Command.js')
 const Response = require('../classes/Response.js')
 const moment = require('moment')
+const wiki = requre('wiki').default
 
 module.exports = new Command(
   'suggest',
@@ -56,3 +57,7 @@ module.exports = new Command(
     // return new Response(msg, '', 25000, embed)
   }
 )
+
+async function wiki (term) {
+  return (await wiki().page(term)).raw.fullurl
+}
