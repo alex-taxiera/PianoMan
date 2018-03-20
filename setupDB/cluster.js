@@ -70,7 +70,7 @@ async function start () {
         let pairX = (normalizeFloat(song.tempo, tempoMax, tempoMin)) // + normalizeFloat(song.loudness)) / 2
         let pairY = normalizeFloat(song.key, 11, 0) // Key is always 1-12
         let pair = [pairX, pairY]
-        pointObject[JSON.stringify(pair)] = song.track_id
+        pointObject[song.track_id] = { location: JSON.stringify(pair) }
         graphArray.push(pair)
         // let sections = JSON.parse(song.sections_start)
         // let sectionavg = sections.reduce((a,b) => a + b, 0) / song.sections_start.length
@@ -82,27 +82,32 @@ async function start () {
   // let graphArray = require('./data.json')
   // let pointObject = require('./dict.json')
 
-  let data = (require('child_process').spawnSync('py', [require('path').join(__dirname, '/cluster.py')])).stdout
-  let kmeans = JSON.parse(data)
-  for (let i = 0; i < kmeans.labels.length; i++) {
-    let cluster = kmeans.labels[i]
-    let point = JSON.stringify(graphArray[i])
-    let track_id = pointObject[point]
-    pointObject[point] = {cluster, track_id}
+  let { labels, centers } = JSON.parse((require('child_process').spawnSync('py', [require('path').join(__dirname, '/cluster.py')])).stdout)
+  let labelObject = {}
+  for (let i = 0; i < graphArray.length; i++) {
+    labelObject[JSON.stringify(graphArray[i])] = labels[i]
+  }
+  for (let point in labelObject) {
+    let cluster = labelObject[point]
+    for (let song in pointObject) {
+      // console.log('1', JSON.stringify(pointObject[song].location))
+      // console.log('2', JSON.stringify(point))
+      if (JSON.stringify(pointObject[song].location) === JSON.stringify(point)) {
+        console.log('pls')
+        pointObject[song].cluster = cluster
+      }
+    }
   }
   let clusters = []
-  for (let i = 0; i < kmeans.centers.length; i++) {
-    let center = JSON.stringify(kmeans.centers[i])
-    let cluster_id = i
-    clusters[i] = {cluster_id, center}
+  for (let i = 0; i < centers.length; i++) {
+    clusters[i] = { cluster_id: i, center: JSON.stringify(centers[i]) }
   }
   require('fs').writeFileSync('clusters.json', JSON.stringify(clusters, null, 2))
   Promise.all(clusters.map((val) => [['clusters', val]]).map(db.insert)).then(() => {
     // {table, condition, data}
     let updates = []
-    for (let point in pointObject) {
-      let {cluster, track_id} = pointObject[point]
-      updates.push({table: 'songs', condition: {track_id}, data: {cluster, location: point}})
+    for (let track_id in pointObject) {
+      updates.push({ table: 'songs', condition: { track_id }, data: pointObject[track_id] })
     }
     require('fs').writeFileSync('update.json', JSON.stringify(updates, null, 2))
     Promise.all(updates.map(db.update)).then(process.exit)

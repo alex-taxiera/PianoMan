@@ -27,8 +27,8 @@ module.exports = {
     }
   },
   update: async function ({table, condition, data}) {
-    console.log(condition)
-    process.exit()
+    // console.log(condition)
+    // process.exit()
     try {
       await md(table).where(condition).update(data).then()
     } catch (e) {
