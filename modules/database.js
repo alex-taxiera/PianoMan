@@ -17,6 +17,11 @@ var md = require('knex')({
 let clientMap = new Map()
 
 module.exports = {
+  select: async function ({ table, columns, offset = 0, limit = module.exports.count(table) }) {
+    return md(table).select(columns).offset(offset).limit(limit)
+    .then((rows) => rows)
+    .catch((e) => undefined)
+  },
   insert: async function (data) {
     for (let [table, value] of data) {
       try {
@@ -26,20 +31,42 @@ module.exports = {
       }
     }
   },
-  update: async function ({table, condition, data}) {
-    // console.log(condition)
-    // process.exit()
+  update: async function ({ table, condition, data }) {
     try {
       await md(table).where(condition).update(data).then()
     } catch (e) {
       console.error(e)
     }
   },
-  pluck: async function (table, pluckee) {
-    return md(table).pluck(pluckee)
+  max: function ({ table, column }) {
+    return md(table).max(column)
+    .then((max) => max[0][`max(\`${column}\`)`])
+    .catch((e) => undefined)
   },
-  lastSong: async function () {
-    return (await md('songs').pluck('track_id').orderBy('track_id', 'desc'))[0]
+  min: function ({ table, column }) {
+    return md(table).min(column)
+    .then((min) => min[0][`min(\`${column}\`)`])
+    .catch((e) => undefined)
+  },
+  minMax: async function ({ table, columns }) {
+    let d = {}
+    columns = columns.map((column) => { return { table, column } })
+    let mins = await Promise.all(columns.map(module.exports.min))
+    let maxs = await Promise.all(columns.map(module.exports.max))
+    for (let i = 0; i < columns.length; i++) {
+      d[columns[i].column] = { min: mins[i], max: maxs[i] }
+    }
+    return d
+  },
+  count: function (table) {
+    return md(table).count('*')
+    .then((val) => val[0]['count(*)'])
+    .catch((e) => undefined)
+  },
+  lastSong: function () {
+    return md('songs').pluck('track_id').orderBy('track_id', 'desc')
+    .then((val) => val[0])
+    .catch((e) => undefined)
   },
   initialize: function (guilds, channels) {
     let saves = fs.readdirSync(data).filter((file) => {
