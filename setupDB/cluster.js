@@ -2,7 +2,7 @@
 // We'll be running the algorithm, writing cluster down in DB, and picking random song from same cluster in db
 // To implement with live results, we'd add each song played over the course of the day to the db, then when
 // Day comes to an end, add them all to the db, assign cluster, recenter, and push new Kmeans to live.
-
+const db = require('../modules/database.js')
 var md = require('knex')({
   client: 'mysql',          // Variable connection name, match to cloud
   connection: {
@@ -14,6 +14,7 @@ var md = require('knex')({
   pool: { min: 1, max: 100 }
 })
 
+const limit = 2000
 // To remove = duration, hotttnesss, danceability, energy, start_of_fade_out,
 // end_of_fade_in
 
@@ -51,48 +52,59 @@ async function tempoMinFind () {
 //   })
 // }
 
-let graphArray = []
-let resultDict = {}
+start()
 
-md('metadata').select('*').then(async (rows) => {
-  let arraylen = rows.length
-  for (let i = 0; i < arraylen; i++) {
-    let xyPair = []
-    let song = rows[i]
-    let pairX = 0
-    let pairY = 0
-    let tempoMax = await tempoMaxFind()
-    let tempoMin = await tempoMinFind()
+async function start () {
+  let pointObject = {}
+  let graphArray = []
 
-    pairX = (normalizeFloat(song.tempo, tempoMax, tempoMin)) // + normalizeFloat(song.loudness)) / 2
-    pairY = normalizeFloat(song.key, 11, 0) // Key is always 1-12
-    xyPair = [pairX, pairY]
-    resultDict[JSON.stringify(xyPair)] = song.track_id
+  let tempoMax = await tempoMaxFind()
 
-    graphArray.push([pairX, pairY])
-    // let sections = JSON.parse(song.sections_start)
-    // let sectionavg = sections.reduce((a,b) => a + b, 0) / song.sections_start.length
+  let tempoMin = await tempoMinFind()
+
+  let count = (await md('metadata').count('*').then())[0]['count(*)']
+  for (let i = 0; i < count; i += limit) {
+    await md('metadata').select('*').offset(i).limit(limit).then(async (rows) => {
+      for (let j = 0; j < rows.length; j++) {
+        let song = rows[j]
+        let pairX = (normalizeFloat(song.tempo, tempoMax, tempoMin)) // + normalizeFloat(song.loudness)) / 2
+        let pairY = normalizeFloat(song.key, 11, 0) // Key is always 1-12
+        let pair = [pairX, pairY]
+        pointObject[JSON.stringify(pair)] = song.track_id
+        graphArray.push(pair)
+        // let sections = JSON.parse(song.sections_start)
+        // let sectionavg = sections.reduce((a,b) => a + b, 0) / song.sections_start.length
+      }
+    })
   }
+  require('fs').writeFileSync('data.json', JSON.stringify(graphArray, null, 2))
+  require('fs').writeFileSync('dict.json', JSON.stringify(pointObject, null, 2))
+  // let graphArray = require('./data.json')
+  // let pointObject = require('./dict.json')
 
-  var clusterMaker = require('clusters')
-
-  clusterMaker.k(15)
-  clusterMaker.iterations(850)
-  clusterMaker.data(graphArray)
-
-  let centroids = clusterMaker.clusters()
-
-  let final = centroids.map((_, i) => {
-    return { centroid: i, songs: _.points.map((point) => resultDict[JSON.stringify(point)]) }
-  })
-  console.log(final)
-
-  for (let centroid of final) {
-    for (let song of centroid.songs) {
-      md('songs').where({track_id: song}).update({clusters: centroid.centroid}).then(console.log)
+  let data = (require('child_process').spawnSync('py', [require('path').join(__dirname, '/cluster.py')])).stdout
+  let kmeans = JSON.parse(data)
+  for (let i = 0; i < kmeans.labels.length; i++) {
+    let cluster = kmeans.labels[i]
+    let point = JSON.stringify(graphArray[i])
+    let track_id = pointObject[point]
+    pointObject[point] = {cluster, track_id}
+  }
+  let clusters = []
+  for (let i = 0; i < kmeans.centers.length; i++) {
+    let center = JSON.stringify(kmeans.centers[i])
+    let cluster_id = i
+    clusters[i] = {cluster_id, center}
+  }
+  require('fs').writeFileSync('clusters.json', JSON.stringify(clusters, null, 2))
+  Promise.all(clusters.map((val) => [['clusters', val]]).map(db.insert)).then(() => {
+    // {table, condition, data}
+    let updates = []
+    for (let point in pointObject) {
+      let {cluster, track_id} = pointObject[point]
+      updates.push({table: 'songs', condition: {track_id}, data: {cluster, location: point}})
     }
-  }
-})
-
-// md('metadata').select('*').where(`track_id=${song1.track_id}`).then((newrows) => {
-// })
+    require('fs').writeFileSync('update.json', JSON.stringify(updates, null, 2))
+    Promise.all(updates.map(db.update)).then(process.exit)
+  })
+}
