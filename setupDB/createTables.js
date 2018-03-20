@@ -55,12 +55,20 @@ md.schema.createTable('artists', (table) => {
       table.specificType('year', 'year')
       table.string('artist_id').references('artist_id').inTable('artists')
       table.string('track_id').references('track_id').inTable('metadata')
+      table.integer('cluster')
+      table.text('location', 'longtext')
     }).then(() => {
       md.schema.createTable('users', (table) => {
         table.charset('utf8')
         table.string('user_id').primary()
         table.text('recent_songs', 'longtext')
-      }).then(() => { md.destroy() })
+      }).then(() => {
+        md.schema.createTable('clusters', (table) => {
+          table.charset('utf8')
+          table.integer('cluster_id').primary()
+          table.text('center', 'longtext')
+        }).then(() => { md.destroy() })
+      })
     })
   })
 })

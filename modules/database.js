@@ -26,6 +26,15 @@ module.exports = {
       }
     }
   },
+  update: async function ({table, condition, data}) {
+    // console.log(condition)
+    // process.exit()
+    try {
+      await md(table).where(condition).update(data).then()
+    } catch (e) {
+      console.error(e)
+    }
+  },
   pluck: async function (table, pluckee) {
     return md(table).pluck(pluckee)
   },
