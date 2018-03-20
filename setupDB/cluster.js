@@ -3,7 +3,6 @@
 // Day comes to an end, add them all to the db, assign cluster, recenter, and push new Kmeans to live.
 const db = require('../modules/database.js')
 const fs = require('fs')
-const limit = 2000
 // To remove = duration, hotttnesss, danceability, energy, start_of_fade_out,
 // end_of_fade_in
 
@@ -13,17 +12,20 @@ const limit = 2000
 start()
 
 async function start () {
-  let table = 'metadata'
+  const limit = 2000
+
+  const table = 'metadata'
   let columns = ['tempo', 'key']
-  let minMax = await db.minMax({ table, columns })
+  const minMax = await db.minMax({ table, columns })
   columns.push('track_id')
+
   let pointObject = {}
   let graphArray = []
-
-  let count = await db.count('metadata')
+  const count = await db.count('metadata')
 
   for (let offset = 0; offset < count; offset += limit) {
     let metadata = await db.select({ table, columns, offset, limit })
+    console.log('1', metadata)
     for (let i = 0; i < metadata.length; i++) {
       let location = []
       for (let attr in metadata[i]) {
