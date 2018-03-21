@@ -17,8 +17,9 @@ var md = require('knex')({
 let clientMap = new Map()
 
 module.exports = {
-  select: async function ({ table, columns, offset = 0, limit = module.exports.count(table) }) {
-    return md(table).select(columns).offset(offset).limit(limit)
+  select: async function ({ table, columns, offset = 0, limit = null, where = true }) {
+    if (!limit) limit = await module.exports.count(table)
+    return md(table).select(columns).where(where).offset(offset).limit(limit)
     .then((rows) => rows)
     .catch((e) => undefined)
   },
