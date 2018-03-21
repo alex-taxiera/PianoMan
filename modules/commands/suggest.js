@@ -1,26 +1,37 @@
 const Command = require('../classes/Command.js')
 const Response = require('../classes/Response.js')
+const util = require('util')
 const moment = require('moment')
-const wiki = requre('wiki').default
+const wikijs = require('wikijs').default
+const math = require('mathjs')
 const db = require('../database.js')
+const ytsr = require('ytsr')
+
+const search = util.promisify(ytsr.search)
 
 module.exports = new Command(
   'suggest',
   'Generates five suggestions based on your listening history',
   [],
   'Anyone',
-  function (msg) {
+  async function (msg) {
     // get data on message.member.id
     // call algorithm on user database
     // simulated user data
-    let info = { id: 'abc', recent_songs: ['SOHXFBA12A8C13D637', 'SOLGHDZ12AB0183B11', 'SOLJCCO12A6701F987', 'SOMZZON12A6701D3B9', 'SONHOTT12A8C13493C']}
-    let suggestions = [
-      {name: 'All Star', sLink: 'https://www.youtube.com/watch?v=L_jWHffIx5E', artist: 'Smash Mouth', aLink: 'https://en.wikipedia.org/wiki/Smash_Mouth'},
-      {name: 'Photograph', sLink: 'https://www.youtube.com/watch?v=BB0DU4DoPP4', artist: 'Nickelback', aLink: 'https://en.wikipedia.org/wiki/Nickelback'},
-      {name: 'Never Gonna Give You Up', sLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', artist: 'Rick Astley', aLink: 'https://en.wikipedia.org/wiki/Rick_Astley'},
-      {name: 'Shooting Stars', sLink: 'https://www.youtube.com/watch?v=feA64wXhbjo', artist: 'Bag Raiders', aLink: 'https://en.wikipedia.org/wiki/Bag_Raiders'},
-      {name: "Running in the 90's", sLink: 'https://www.youtube.com/watch?v=BJ0xBCwkg3E', artist: 'Maurizio De Jorio', aLink: 'https://en.wikipedia.org/wiki/Maurizio_De_Jorio'}
-    ]
+    let info = { id: 'abc', recent_songs: ['SOYEGAB12A8C142FDE'] }
+//     select * from million.songs where song_id='SOKUPAO12AB018D576';
+// select * from million.songs where song_id='SOVORDN12AF72A4E66';
+// select * from million.songs where song_id='SODXRTY12AB0180F3B';
+    let songs = await returnSuggest(info)
+    let suggestions = []
+    for (let i = 0; i < songs.length; i++) {
+      let query = songs[i].title + ' ' + songs[i].album + ' ' + songs[i].artist
+      let results = (await search(query, { limit: 5 }))
+      results = results.items.filter((v) => v.type === 'video')
+      let sLink = results[0].link
+      console.log(sLink)
+      suggestions.push({ name: songs[i].title, artist: songs[i].artist, sLink, aLink: await wiki(songs[i].artist) })
+    }
     // format suggestions
     let embed = {
       description: ':musical_note: [**Suggestions**](https://github.com/alex-taxiera/PianoMan)',
@@ -62,7 +73,12 @@ module.exports = new Command(
 )
 
 async function wiki (term) {
-  return (await wiki().page(term)).raw.fullurl
+  try {
+    console.log((await wikijs().page(term)).raw.fullurl)
+    return (await wikijs().page(term)).raw.fullurl
+  } catch (e) {
+    return ''
+  }
 }
 
 async function returnSuggest (data) {
@@ -73,8 +89,7 @@ async function returnSuggest (data) {
   for (let i = 0; rows.length > i; i++) {
     values.push(rows[i][0].cluster)
   }
-  let mode = math.mode(values)
-
+  let mode = math.mode(values)[0]
   let suggests = await db.select({ table: 'songs', columns: ['artist_id', 'title', 'album'], where: { cluster: mode }, limit: 5 })
   for (let i = 0; i < suggests.length; i++) {
     suggests[i].artist = (await db.select({ table: 'artists', columns: ['name'], where: { artist_id: suggests[i].artist_id } }))[0].name
