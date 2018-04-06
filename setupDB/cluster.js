@@ -15,17 +15,16 @@ async function start () {
   const limit = 2000
 
   const table = 'metadata'
-  let columns = ['tempo', 'key']
+  let columns = ['tempo', 'key', 'loudness', 'timbre', 'pitch']
   const minMax = await db.minMax({ table, columns })
   columns.push('track_id')
 
   let pointObject = {}
   let graphArray = []
-  const count = await db.count('metadata')
+  const count = await db.count(table)
 
   for (let offset = 0; offset < count; offset += limit) {
     let metadata = await db.select({ table, columns, offset, limit })
-    console.log('1', metadata)
     for (let i = 0; i < metadata.length; i++) {
       let location = []
       for (let attr in metadata[i]) {
