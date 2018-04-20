@@ -20,24 +20,18 @@ module.exports = {
   select: async function ({ table, columns, offset = 0, limit = null, where = true }) {
     if (!limit) limit = await module.exports.count(table)
     return md(table).select(columns).where(where).offset(offset).limit(limit)
-    .then((rows) => rows)
+    .then((rows) => rows[1] ? rows : rows[0])
     .catch((e) => undefined)
   },
-  insert: async function (data) {
-    for (let [table, value] of data) {
-      try {
-        await md(table).insert(value).then()
-      } catch (e) {
-        console.error(e.sqlMessage)
-      }
-    }
+  insert: async function ({ table, data }) {
+    return md(table).insert(data)
+    .then((success) => 1)
+    .catch((e) => undefined)
   },
-  update: async function ({ table, condition, data }) {
-    try {
-      await md(table).where(condition).update(data).then()
-    } catch (e) {
-      console.error(e)
-    }
+  update: function ({ table, condition, data }) {
+    return md(table).where(condition).update(data)
+    .then((success) => 1)
+    .catch((e) => undefined)
   },
   max: function ({ table, column }) {
     return md(table).max(column)

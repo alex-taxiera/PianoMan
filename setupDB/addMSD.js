@@ -18,7 +18,7 @@ async function start (path) {
   lastSong = await db.lastSong()
   console.log(lastSong)
   await stats(path)
-  trimDupes()
+  trimFiles()
   if (files.length > 0) {
     read()
   } else {
@@ -27,25 +27,21 @@ async function start (path) {
 }
 
 async function stats (path) {
-  if (files.length < max) {
-    let stat = fs.statSync(path)
-    if (stat.isDirectory()) {
-      await handleDirectory(path)
-    } else if (stat.isFile() && path.endsWith('h5')) {
-      files.push(path)
-      if (files.length >= max) {
-        trimDupes()
-      }
-    }
+  let stat = fs.statSync(path)
+  if (stat.isDirectory()) {
+    await handleDirectory(path)
+  } else if (stat.isFile() && path.endsWith('h5')) {
+    files.push(path)
   }
 }
 
-function trimDupes () {
+function trimFiles () {
   for (let i = 0; i < files.length; i++) {
     if (files[i].includes(lastSong)) {
       files = files.filter((val, j) => j > i)
     }
   }
+  files = files.filter((val, i) => i < max)
 }
 
 async function read () {
@@ -73,9 +69,13 @@ async function readData (path) {
   let track = h5(path)
   let { metadata, artist, song } = makeObjects(track)
   console.log(track.track_id, ++count, Date.now() - time)
-  data.push(['metadata', metadata], ['artists', artist], ['songs', song])
-  queue.push(data)
-  if (queue.length === batch) { await handleQueue(); queue = [] }
+  data.push(
+    { table: 'metadata', data: metadata },
+    { table: 'artists', data: artist },
+    { table: 'songs', data: song }
+  )
+  queue = queue.concat(data)
+  if (queue.length === batch * 3) { await handleQueue(); queue = [] }
 }
 
 function makeObjects (track) {
