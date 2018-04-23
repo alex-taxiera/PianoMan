@@ -23,14 +23,10 @@ module.exports = {
     .then((rows) => rows)
     .catch((e) => undefined)
   },
-  insert: async function (data) {
-    for (let [table, value] of data) {
-      try {
-        await md(table).insert(value).then()
-      } catch (e) {
-        console.error(e.sqlMessage)
-      }
-    }
+  insert: async function ({ table, data }) {
+    return md(table).insert(data)
+    .then(() => 1)
+    .catch(() => undefined)
   },
   update: async function ({ table, condition, data }) {
     try {
