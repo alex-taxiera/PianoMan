@@ -8,7 +8,6 @@ const func = require('./common.js')
 const db = require('./database.js')
 const Player = require('./classes/Player.js')
 const Response = require('./classes/Response.js')
-const data = './data/guilds/'
 
 // TODO move youtube interfacing to youtube.js
 
@@ -275,44 +274,38 @@ function playNextSong (id, msg) {
     let user = player.queue[0].user
     player.nowPlaying = {title: title, user: user}
 
-    const mp3 = `${data}${id}.mp3`
-
+    let info = require('../PianoMan.js').VoiceConnections.getForGuild(id)
+    player.encoder = info.voiceConnection
+    .createExternalEncoder({
+      type: 'ffmpeg',
+      source: '-',
+      format: 'pcm'
+    })
     let videoLink = player.queue[0].link
     let video = ytdl(videoLink, ['--format=bestaudio/worstaudio', '--no-playlist'], {maxBuffer: Infinity})
-    video.pipe(fs.createWriteStream(mp3))
+    video.pipe(player.encoder.stdin)
 
-    video.once('end', () => {
-      if ((playerInfo.informNowPlaying && playerInfo.informAutoPlaying) ||
-      (playerInfo.informNowPlaying && user.id !== require('../PianoMan.js').User.id)) {
-        str = `Now playing: "${title}" (requested by ${user.username})`
-        func.messageHandler(new Response(id, str, 10000))
+    player.encoder.play()
+    player.encoder.voiceConnection.getEncoder().setVolume(playerInfo.volume / 2)
+
+    if (player.encoder.voiceConnection.channel.members.length === 1) {
+      player.paused = true
+      player.encoder.voiceConnection.getEncoderStream().cork()
+    }
+    if ((playerInfo.informNowPlaying && playerInfo.informAutoPlaying) ||
+    (playerInfo.informNowPlaying && user.id !== require('../PianoMan.js').User.id)) {
+      str = `Now playing: "${title}" (requested by ${user.username})`
+      func.messageHandler(new Response(id, str, 10000))
+    }
+    player.encoder.once('end', () => {
+      player.isPlaying = false
+      if (!player.paused && player.queue.length !== 0) {
+        playNextSong(id)
+      } else if (!player.paused && playerInfo.autoplay) {
+        module.exports.autoQueue(id)
       }
-
-      let info = require('../PianoMan.js').VoiceConnections.getForGuild(id)
-      player.encoder = info.voiceConnection
-      .createExternalEncoder({
-        type: 'ffmpeg',
-        source: mp3,
-        format: 'pcm'
-      })
-
-      player.encoder.play()
-      player.encoder.voiceConnection.getEncoder().setVolume(playerInfo.volume / 2)
-
-      if (player.encoder.voiceConnection.channel.members.length === 1) {
-        player.paused = true
-        player.encoder.voiceConnection.getEncoderStream().cork()
-      }
-
-      player.encoder.once('end', () => {
-        player.isPlaying = false
-        if (!player.paused && player.queue.length !== 0) {
-          playNextSong(id)
-        } else if (!player.paused && playerInfo.autoplay) {
-          module.exports.autoQueue(id)
-        }
-      })
     })
+
     player.queue.splice(0, 1)
   }
   func.messageHandler(new Response(msg, str))
