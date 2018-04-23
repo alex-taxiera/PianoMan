@@ -96,13 +96,13 @@ async function returnSuggest (data) {
   let euclidean = require('compute-euclidean-distance')
 
   // Add each location value together
-  for (let j = 0; j < 5; j++) {
+  for (let j = 0; j < avgloc.length; j++) {
     for (let i = 0; locations.length > i; i++) {
       avgloc[j] += locations[i][j]
     }
   }
   // Divide summated location values to find average
-  for (let j = 0; j < 5; j++) {
+  for (let j = 0; j < avgloc.length; j++) {
     avgloc[j] /= locations.length
   }
 
