@@ -18,11 +18,12 @@ module.exports = new Command(
     // get data on message.member.id
     // call algorithm on user database
     // simulated user data
-    let info = { id: 'abc', recent_songs: ['SOYEGAB12A8C142FDE'] }
-//     select * from million.songs where song_id='SOKUPAO12AB018D576';
-// select * from million.songs where song_id='SOVORDN12AF72A4E66';
-// select * from million.songs where song_id='SODXRTY12AB0180F3B';
-    let songs = await returnSuggest(info)
+    const info = [
+      { id: '434507972379672587', recent_songs: ['SOYEGAB12A8C142FDE'] },
+      { id: '137371223800676352', recent_songs: ['SONQHCW12AF72A574E'] }
+    ]
+    const userData = info.find((user) => user.id === msg.author.id)
+    let songs = await returnSuggest(userData)
     let suggestions = []
     for (let i = 0; i < songs.length; i++) {
       let query = songs[i].title + ' ' + songs[i].album + ' ' + songs[i].artist
@@ -48,7 +49,7 @@ module.exports = new Command(
       let song = suggestions[i]
       embed.description += `\n\n#${i + 1} [${song.name}](${song.sLink})\nBy: [${song.artist}](${song.aLink})`
     }
-    msg.reply('Respond with a number to select a song!', false, embed)
+    const responseEmbed = await msg.reply('Respond with a number to select a song!', false, embed)
     let count = 0
     let loop = setInterval(function () {
       count++
@@ -59,11 +60,13 @@ module.exports = new Command(
         if (isNaN(response) || response < 1 || response > suggestions.length + 1) {
           clearInterval(loop)
         } else {
+          responseEmbed.delete().catch(console.error)
           require('../common.js').messageHandler(require('./request.js').execute(msg, [suggestions[response - 1].sLink]))
           clearInterval(loop)
         }
       }
       if (count > 30) {
+        responseEmbed.delete().catch(console.error)
         clearInterval(loop)
       }
     }, 1000)
