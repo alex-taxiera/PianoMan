@@ -82,15 +82,52 @@ async function wiki (term) {
 }
 
 async function returnSuggest (data) {
+  // Gather location # from songs table for each recently played.
+  let temp2 = data.recent_songs.map((val) => { return { table: 'songs', limit: 100, columns: ['location'], where: {song_id: val} } })
+  let rows2 = await Promise.all(temp2.map(db.select))
+
+  // Parse locations into numbers
+  let locations = rows2.map((val) => { return JSON.parse(val[0].location) })
+  let avgloc = [0, 0, 0, 0, 0]
+
+  let euclidean = require('compute-euclidean-distance')
+
+  // Add each location value together
+  for (let j = 0; j < 5; j++) {
+    for (let i = 0; locations.length > i; i++) {
+      avgloc[j] += locations[i][j]
+    }
+  }
+  // Divide summated location values to find average
+  for (let j = 0; j < 5; j++) {
+    avgloc[j] /= locations.length
+  }
+
+  let clusterlocs = await db.select({ table: 'clusters', columns: ['cluster_id', 'center'], limit: 20 })
+  clusterlocs = clusterlocs.map((val) => { return { cluster_id: val.cluster_id, center: JSON.parse(val.center) } })
+
+  clusterlocs.map((cluster) => {
+    cluster.center = euclidean(cluster.center, avgloc)
+  })
+
+  // I made this - Damon
+  let closest = clusterlocs.sort((a, b) => {
+    if (a.center < b.center) return -1
+    else if (b.center < a.center) return 1
+    return 0
+  })[0]
+
+  console.log(clusterlocs)
+  console.log(closest)
+
   // Array of tuples [cluster, location]
-  let temp = data.recent_songs.map((val) => { return { table: 'songs', columns: ['song_id', 'cluster', 'location'], where: { song_id: val } } })
+  let temp = data.recent_songs.map((val) => { return { table: 'songs', limit: 100, columns: ['song_id', 'cluster', 'location'], where: { song_id: val } } })
   let rows = await Promise.all(temp.map(db.select))
   let values = []
   for (let i = 0; rows.length > i; i++) {
     values.push(rows[i][0].cluster)
   }
-  let mode = math.mode(values)[0]
-  let suggests = await db.select({ table: 'songs', columns: ['artist_id', 'title', 'album'], where: { cluster: mode }, limit: 5 })
+  let suggests = await db.select({ table: 'songs', columns: ['artist_id', 'title', 'album'], where: { cluster: closest.cluster_id }, limit: 5 })
   for (let i = 0; i < suggests.length; i++) {
     suggests[i].artist = (await db.select({ table: 'artists', columns: ['name'], where: { artist_id: suggests[i].artist_id } }))[0].name
   }
